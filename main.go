@@ -6,14 +6,17 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/hdqdev/nodeparse/pkg/manager"
 	"github.com/samber/lo"
 	"github.com/xmdhs/clash2singbox/convert"
 	"github.com/xmdhs/clash2singbox/httputils"
 	"github.com/xmdhs/clash2singbox/model/clash"
+	"github.com/xmdhs/clash2singbox/model/singbox"
 	"gopkg.in/yaml.v3"
 )
 
@@ -51,11 +54,17 @@ func main() {
 	c := clash.Clash{}
 	var singList []map[string]any
 	var tags []string
+	var s []singbox.SingBoxOut
+	var err error
 	if url != "" {
 		var err error
 		c, singList, tags, err = httputils.GetAny(context.TODO(), &http.Client{Timeout: 10 * time.Second}, url, false)
 		if err != nil {
 			panic(err)
+		}
+		s, err = convert.Clash2sing(c)
+		if err != nil {
+			fmt.Println(err)
 		}
 	} else if path != "" {
 		b, err := os.ReadFile(path)
@@ -63,9 +72,22 @@ func main() {
 			panic(err)
 		}
 		err = yaml.Unmarshal(b, &c)
-		if err != nil {
-			panic(err)
+		if err == nil {
+			s, err = convert.Clash2sing(c)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			nm := manager.NewNodeManager()
+			err = nm.LoadFromFile(path)
+			if err != nil {
+				log.Fatal(err)
+				panic(err)
+			}
+			fmt.Printf("node: %v\n", nm)
+			s, err = convert.Nodes2Sing(nm.GetNodes())
 		}
+
 	} else {
 		panic("url 和 i 参数不能都为空")
 	}
@@ -80,11 +102,6 @@ func main() {
 			panic(err)
 		}
 		configByte = b
-	}
-
-	s, err := convert.Clash2sing(c)
-	if err != nil {
-		fmt.Println(err)
 	}
 
 	var outb []byte

@@ -1,10 +1,9 @@
 module github.com/xmdhs/clash2singbox
 
-go 1.22.0
-
-toolchain go1.23.2
+go 1.23.3
 
 require (
+	github.com/hdqdev/nodeparse v0.1.2
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
 	golang.org/x/sync v0.8.0
 	gopkg.in/yaml.v3 v3.0.1

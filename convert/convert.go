@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hdqdev/nodeparse/pkg/model"
 	"github.com/xmdhs/clash2singbox/model/clash"
 	"github.com/xmdhs/clash2singbox/model/singbox"
 )
@@ -60,6 +61,28 @@ func Clash2sing(c clash.Clash) ([]singbox.SingBoxOut, error) {
 	}
 
 	return sl, jerr
+}
+
+func Nodes2Sing(nodes []model.Node) ([]singbox.SingBoxOut, error) {
+	sl := make([]singbox.SingBoxOut, 0, len(nodes))
+	for _, v := range nodes {
+		sNode := singbox.SingBoxOut{
+			Type:       v.GetType(),
+			Tag:        v.GetName(),
+			Server:     v.GetServer(),
+			ServerPort: v.GetPort(),
+		}
+		switch v.(type) {
+		case *model.SSNode:
+			sNode.Password = v.(*model.SSNode).Password
+			sNode.Method = v.(*model.SSNode).Method
+		default:
+			continue
+		}
+		sl = append(sl, sNode)
+	}
+
+	return sl, nil
 }
 
 var ErrNotSupportType = errors.New("不支持的类型")
